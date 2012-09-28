@@ -14,7 +14,7 @@ try:
 	idcheck="SELECT * FROM scanner WHERE card_id = {0}".format(cardid) #Prepare check statment			
 	cur.execute(idcheck)
 	checkresult=cur.fetchone()
-	print(checkresult)
+	#print(checkresult)	#DEBUG STATMENTS
 	if checkresult is None:
 		sqlstring="INSERT INTO scanner (card_id, punch_in_or_out,location_code) VALUES({0}, 'IN', {1});".format(cardid,locationid) #Punch the user in
 	elif checkresult is not None:
