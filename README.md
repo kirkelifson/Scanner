@@ -7,7 +7,8 @@ Each user is given a LoCo magnetic stripe card which holds their assigned id.
 
 Scans (punches in and out) are stored in a local MySQL database.
 
-Todo:
+#Todo:
+
 1. Fix database/table names
 2. Verify validity of cards and input with hash tables
 3. Add debug flag so you don't have to comment out statements
