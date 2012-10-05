@@ -9,11 +9,10 @@ try:
   # promethus -> prometheus
   con = mdb.connect('localhost','pi','','scanner'); #Not final sql details
   cur = con.cursor()
-  card_id = raw_input("====> ")
-  card_id=card_id.lstrip('%B')
-  card_id_list=card_id.split('^')
-  card_id=card_id_list[0]
-  print(card_id)
+  card_id = raw_input("====> ")    #Wait for card data from the reader
+  card_id=card_id.lstrip('%B')     #Remove the sentinel for track one
+  card_id_list=card_id.split('^')  #Split the track using the "^" sentinel so we can pull the card id easily  
+  card_id=card_id_list[0]          #We now have just the card id
   locationid=random.randint(1,99) #Create a random location code
   cur.execute("use scanner") #Make sure we're in the right table
   idcheck="SELECT * FROM scanner WHERE card_id = {0}".format(card_id) #Prepare check statment
