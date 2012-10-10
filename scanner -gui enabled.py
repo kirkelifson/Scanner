@@ -4,6 +4,22 @@ import MySQLdb as mdb
 import sys
 import curses
 import random as random
+
+def curses_startup():
+	curwindow = curses.initscr()
+	curwindow.border()
+	curses.start_color()
+	curses.noecho()
+	curses.curs_set(0)
+	curses.init_pair(1,curses.COLOR_BLACK, curses.COLOR_CYAN)
+	curwindow.addstr(1,23, "Checkpoint version 0.1.1 alpha", curses.color_pair(1))
+	curwindow.addstr(12,23, "Waiting for card....", curses.color_pair(1))
+
+def draw_border_info():
+	curwindow.border()
+	curwindow.addstr(1,23, "Checkpoint version 0.1.1 alpha", curses.color_pair(1))
+	
+	
 con = None
 run=1
 curses_startup() #Set up our curses interface
@@ -44,17 +60,5 @@ while run is 1:
   		if con:
     			con.close()
 				
-def curses_startup()
-	curwindow = curses.initscr()
-	curwindow.border()
-	curses.start_color()
-	curses.noecho()
-	curses.curs_set(0)
-	curses.init_pair(1,curses.COLOR_BLACK, curses.COLOR_CYAN)
-	curwindow.addstr(1,23, "Checkpoint version 0.1.1 alpha", curses.color_pair(1))
-	curwindow.addstr(12,23, "Waiting for card....", curses.color_pair(1))
 
-def draw_border_info()
-	curwindow.border()
-	curwindow.addstr(1,23, "Checkpoint version 0.1.1 alpha", curses.color_pair(1))
 
