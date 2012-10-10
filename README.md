@@ -17,6 +17,7 @@ Scans (punches in and out) are stored in a local MySQL database.
   * Users cannot check-in twice in specific amount of time
   * Each station will need to have specific users
     * Should each station have a specific db to cross-check ID's for attendance?
+  * Add a ncurses interface to make life easier for the operator
 
 * Per location basis:
   * Needs to track user entry date
