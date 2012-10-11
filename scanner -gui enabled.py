@@ -30,7 +30,7 @@ curses_startup() #Set up our curses interface
 while run is 1:
 	try:
 		# promethus -> prometheus
-		con = mdb.connect('localhost','scanner_test','promethus','scanner'); #Not final sql details
+		con = mdb.connect('localhost','pi','','scanner'); #Not final sql details
 		cur = con.cursor()
 		#card_id = raw_input("====> ")   #NO LONGER USED 
 		card_id=curwindow.getstr()
@@ -63,5 +63,5 @@ while run is 1:
 
 	finally:
   		if con:
-    			con.close()
+			con.close()
 			curses.endwin()
