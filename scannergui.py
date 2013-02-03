@@ -9,6 +9,8 @@ will be cross-checked with the database to verify that he or she has
 not been previously checked in. This program will assist in keeping track
 of attendees at Order of the Arrow events for Seminole Lodge 85.
 
+Version: 0.2 [02/03/13]
+
 """
 
 import MySQLdb as mdb
@@ -33,7 +35,7 @@ def curses_startup():
     curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
-    curwindow.addstr(1, 23, "Checkpoint version 0.3.2 alpha", curses.color_pair(1))
+    curwindow.addstr(1, 23, "Checkpoint version 0.2", curses.color_pair(1))
     curwindow.addstr(13, 35, "READY", curses.color_pair(1))
     curwindow.keypad(1)
     curwindow.refresh()
@@ -41,7 +43,7 @@ def curses_startup():
 def draw_border_info():
     curwindow.clear()
     curwindow.border(0)
-    curwindow.addstr(1, 23, "Checkpoint version 0.2.1 alpha", curses.color_pair(1))
+    curwindow.addstr(1, 23, "Checkpoint version 0.2", curses.color_pair(1))
     curwindow.refresh()
 
 def codetype(code):
