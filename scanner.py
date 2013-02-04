@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+import MySQLdb as mdb
+import sys
+import curses
+import commands
 import socket
 
 """
@@ -15,10 +19,8 @@ Version: 0.2 [02/03/13]
 
 """
 
-import MySQLdb as mdb
-import sys
-import curses
-import commands
+import_magic = 9780801993077
+export_magic = 9780745612959
 
 curwindow = curses.initscr()
 
@@ -48,17 +50,21 @@ def draw_border_info():
     curwindow.addstr(1, 23, "Checkpoint version 0.2", curses.color_pair(1))
     curwindow.refresh()
 
+# [^^] possibly merge into a larger function when reading in the data?
 def codetype(code):
-    if (code is 9780801993077):
+    if (code is import_magic):
         importdata()
-    if (code is 9780745612959):
+    elif (code is export_magic):
         exportdata()
 
 # Mounts the thumb drive connected to the raspberry pi for
 # database extraction
 def mountdrives():
-    volname = commands.getstatusoutput('ls /dev/disk/by-label')
-    pointstring = "ls -al /dev/disk/by-label | grep {0}".format(volname[1])
+    volume_name = commands.getstatusoutput('ls /dev/disk/by-label')
+    pointstring = "ls -al /dev/disk/by-label | grep {0}".format(volume_name[1])
+
+    # extract device name from raw file listing
+    # [~~] any better way to accomplish this? grep? str tokenizer?
     mountpointtuple = commands.getstatusoutput(pointstring)
     mountpoint = str(mountpointtuple[1])
     mountpointlst = mountpoint.split(" ")
@@ -78,7 +84,7 @@ def mysql_connect(hostname, username, password, database):
         - define functions for separate mysql processes
 """
 
-# Define static global vars
+# Define static global vars and sockets
 location_id = socket.gethostname()
 mysql_connection = mysql_connect('localhost', 'pi', '', 'scanner')
 mysql_cursor = mysql_connection.cursor()
@@ -92,19 +98,21 @@ while 1 is 1:
     #      over the entire process, it should be divided into subroutines
 
     try:
-        card_id = curwindow.getstr()
         draw_border_info()
+        card_id = curwindow.getstr()
+
+        # [^^] move idcheck into a separate subroutine
         idcheck = "SELECT * FROM scanner WHERE card_id = {0}".format(card_id)
         cur.execute(idcheck)
         checkresult = cur.fetchone()
 
         if checkresult is None:
-            sqlstring = "INSERT INTO scanner (card_id, punch_in_or_out, location_code) VALUES({0}, 'ACCEPTED', {1});".format(card_id, locationid)
+            sqlstring = "INSERT INTO scanner (card_id, punch_in_or_out, location_code) VALUES({0}, 'ACCEPTED', {1});".format(card_id, location_id)
             status = "Accepted"
             status_color = 3
 
         elif checkresult is not None:
-            sqlstring = "INSERT INTO scanner (card_id, punch_in_or_out, location_code) VALUES({0}, 'REJECTED', {1});".format(card_id, locationid)
+            sqlstring = "INSERT INTO scanner (card_id, punch_in_or_out, location_code) VALUES({0}, 'REJECTED', {1});".format(card_id, location_id)
             status = "Not Accepted"
             status_color = 2
             screen_text = "User: {0} scan {1}".format(card_id,status)
@@ -119,6 +127,7 @@ while 1 is 1:
         panic(e, 1)
 
     finally:
+        # [~~] how would we not have a mysql connection?
         if mysql_connection:
             mysql_connection.close()
             curses.endwin()
