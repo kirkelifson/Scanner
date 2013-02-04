@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import socket
+
 """
 Description:
 
@@ -68,17 +70,30 @@ def mountdrives():
 
 #def exportdata():
 
-mysql_connection = None
-colorstatus = 0
+def mysql_connect(hostname, username, password, database):
+    return mdb.connect(hostname, username, password, database)
+
+"""
+    todo:
+        - define functions for separate mysql processes
+"""
+
+# Define static global vars
+location_id = socket.gethostname()
+mysql_connection = mysql_connect('localhost', 'pi', '', 'scanner')
+mysql_cursor = mysql_connection.cursor()
+mysql_cursor.execute("use scanner")
+
 curses_startup()
+status_color = 0
+
 while 1 is 1:
+    # [~~] I don't believe that we need to have exception handling
+    #      over the entire process, it should be divided into subroutines
+
     try:
-        mysql_connection = mdb.connect('localhost', 'pi', '', 'scanner');
-        cur = mysql_connection.cursor()
         card_id = curwindow.getstr()
         draw_border_info()
-        locationid = 00
-        cur.execute("use scanner")
         idcheck = "SELECT * FROM scanner WHERE card_id = {0}".format(card_id)
         cur.execute(idcheck)
         checkresult = cur.fetchone()
@@ -86,14 +101,14 @@ while 1 is 1:
         if checkresult is None:
             sqlstring = "INSERT INTO scanner (card_id, punch_in_or_out, location_code) VALUES({0}, 'ACCEPTED', {1});".format(card_id, locationid)
             status = "Accepted"
-            colorstatus = 3
+            status_color = 3
 
         elif checkresult is not None:
             sqlstring = "INSERT INTO scanner (card_id, punch_in_or_out, location_code) VALUES({0}, 'REJECTED', {1});".format(card_id, locationid)
             status = "Not Accepted"
-            colorstatus = 2
+            status_color = 2
             screen_text = "User: {0} scan {1}".format(card_id,status)
-            curwindow.addstr(14, 27, screen_text, curses.color_pair(colorstatus))
+            curwindow.addstr(14, 27, screen_text, curses.color_pair(status_color))
             curwindow.refresh()
             cur.execute(sqlstring)
             mysql_connection.commit()
