@@ -51,12 +51,12 @@ def draw_border_info():
     curwindow.refresh()
 
 # [^^] possibly merge into a larger function when reading in the data?
-def codetype(code):
+"""def codetype(code):
     if (code is import_magic):
         importdata()
     elif (code is export_magic):
         exportdata()
-
+"""
 # Mounts the thumb drive connected to the raspberry pi for
 # database extraction
 def mountdrives():
@@ -71,6 +71,9 @@ def mountdrives():
     mountpoint = mountpointlst[12]
     mountpoint = mountpoint.lstrip("../")
     mountstring = "sudo mount /dev/{0} /media/usb".format(mountpoint)
+	outputstatustuple=commands.getstatusoutput(mountstring)
+	outputstatus=outputstatustuple[0]
+	
 
 #def importdata():
 
