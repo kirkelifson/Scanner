@@ -4,13 +4,17 @@ Scanner is a python script that is designed to run on a Raspberry Pi station dur
 Order of the Arrow events held at Seminole Lodge 85. During the event each attendee
 will have a barcode ID on their person which will be scanned at these stations for
 checking in and checking out. Specialized stations will use a fork of this code base
-that will verify the user doesnt have to comment out statements
-4. Make each database easy to flush out upon merge
-5. Checkpoint system:
-  * Users cannot check-in twice in specific amount of time
-  * Each station will need to have specific users
-    * Should each station have a specific db to cross-check ID
+that will verify the user doesn't check in twice during a specified period (esp. for
+verifying lunch line fluidity).
 
-* Per location basis:
-  * Needs to track user entry date
-  * No need for leaving date
+##Features:
+- Python
+- MySQL interface
+- Raspberry Pi
+- Barcode scanner
+
+##To-do:
+- Create import/export functions for managing barcode scans during check-in/check-out
+- Attempt to clean up ncurses boiler-plate
+- Implement separate mysql functions for individual tasks (verify nobody has checked in twice in a session, etc)
+- Clean up code by using global variables, rearranging function defintions, etc.
