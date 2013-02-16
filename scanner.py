@@ -112,7 +112,7 @@ while 1 is 1:
     #      over the entire process, it should be divided into subroutines
 
     try:
-        mysql_connection = mysql_connect('localhost', 'pi', '', 'scanner')
+        mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
 	mysql_cursor = mysql_connection.cursor()
 	mysql_cursor.execute("use scanner")
         card_id = curwindow.getstr()
