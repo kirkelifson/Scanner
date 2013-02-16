@@ -51,12 +51,15 @@ def draw_border_info():
     curwindow.refresh()
 
 # [^^] possibly merge into a larger function when reading in the data?
-"""def codetype(code):
+def codetype(code):
     if (code is import_magic):
-        importdata()
-    elif (code is export_magic):
+       importdata()
+    if (code is export_magic):
         exportdata()
-"""
+
+def isspecial(code)
+    if(code is import_magic || code is export_magic):return 1
+
 # Mounts the thumb drive connected to the raspberry pi for
 # database extraction
 def mountdrives():
@@ -68,10 +71,26 @@ def mountdrives():
     mountstring = "sudo mount /dev/{0} /media/usb".format(str((mountpointtuple[1]).split("/")))
     outputstatus=(commands.getstatusoutput(mountstring))[0]
 	
+def unmountdrives():
+    unmountresult=commands.getstatusoutput("umount /media/usb")
+    
+def importdata():
+    return 0
 
-#def importdata():
 
-#def exportdata():
+
+def exportdata():
+    mountdrives()
+    draw_border_info()
+    curses.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
+    curses.addstr(13,36,"EXPORTING SCAN DATA", curses.color_pair(2))
+    curwindow.refresh()
+    dumpresult=commands.getstatusoutput("mysqldump -h localhost -u root >/media/usb/sqldump")
+    draw_border_info()
+    unmountdrives()
+    curwindow.addstr(13,35,"DRIVES UNMOUNTED", curses.color_pair(2))
+    curwindow.addstr(13,36,"RESUMING NORMAL OPERATION", curses.color_pair(2))
+
 
 def mysql_connect(hostname, username, password, database):
     return mdb.connect(hostname, username, password, database)
@@ -97,6 +116,9 @@ while 1 is 1:
 	mysql_cursor = mysql_connection.cursor()
 	mysql_cursor.execute("use scanner")
         card_id = curwindow.getstr()
+        if(isspecial(code) is 1):
+            codetype(code)
+            card_id = curwindow.getstr()
         draw_border_info()
 	# [^^] move idcheck into a separate subroutine
         idcheck = "SELECT * FROM scanner WHERE card_id = {0}".format(card_id)
