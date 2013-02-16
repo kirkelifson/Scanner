@@ -52,13 +52,13 @@ def draw_border_info():
 
 # [^^] possibly merge into a larger function when reading in the data?
 def codetype(code):
-    if (code is import_magic):
+    if (code == import_magic):
        importdata()
-    if (code is export_magic):
+    if (code == export_magic):
         exportdata()
 
 def isspecial(code):
-    if(code is import_magic or code is export_magic):
+    if(code == import_magic or code == export_magic):
         return 1
 
 # Mounts the thumb drive connected to the raspberry pi for
