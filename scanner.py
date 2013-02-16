@@ -57,7 +57,7 @@ def codetype(code):
     if (code is export_magic):
         exportdata()
 
-def isspecial(code)
+def isspecial(code):
     if(code is import_magic || code is export_magic):return 1
 
 # Mounts the thumb drive connected to the raspberry pi for
