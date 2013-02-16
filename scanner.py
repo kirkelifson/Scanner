@@ -116,8 +116,8 @@ while 1 is 1:
 	mysql_cursor = mysql_connection.cursor()
 	mysql_cursor.execute("use scanner")
         card_id = curwindow.getstr()
-        if(isspecial(code) is 1):
-            codetype(code)
+        if(isspecial(card_id) is 1):    
+            codetype(card_id)
             card_id = curwindow.getstr()
         draw_border_info()
 	# [^^] move idcheck into a separate subroutine
@@ -125,11 +125,11 @@ while 1 is 1:
         mysql_cursor.execute(idcheck)
         checkresult = mysql_cursor.fetchone()
         if checkresult is None:
-            sqlstring = "INSERT INTO scan_data (card_id, punch_in_or_out, location_code) VALUES({0}, 'ACC', {1});".format(card_id, location_id)
+            sqlstring = "INSERT INTO scan_data (card_id, scan_type, location_code) VALUES({0}, 'ACCEPTED', {1});".format(card_id, location_id)
             status = "Accepted"
             status_color =3 
         elif checkresult is not None:
-            sqlstring = "INSERT INTO scan_data (card_id, punch_in_or_out, location_code) VALUES({0}, 'REJ', {1});".format(card_id, location_id)
+            sqlstring = "INSERT INTO scan_data (card_id, scan_type, location_code) VALUES({0}, 'REJECTED', {1});".format(card_id, location_id)
             status = "Not Accepted"
             status_color = 2
 	screen_text = "User: {0} scan {1}".format(card_id,status)
