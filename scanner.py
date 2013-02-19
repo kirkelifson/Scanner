@@ -64,7 +64,7 @@ def isspecial(code):
 # Mounts the thumb drive connected to the raspberry pi for
 # database extraction
 def mountdrives():
-    mountpointstring= "ls -lA /dev/disk/by-label/ | perl -i -p -e 's/\n//' | sed -e 's/.*\///g"
+    mountpointstring= "ls -lA /dev/disk/by-label/ | perl -i -p -e 's/\n//' | sed -e 's/.*\///g'"
     mountpoint=commands.getstatusoutput(mountpointstring)
     mountingstring="sudo mount -t vfat /dev/{0} /media/usb".format(str(mountpoint[1]))
     outputstatus=commands.getstatusoutput(mountingstring)
