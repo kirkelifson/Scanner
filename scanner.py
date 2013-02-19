@@ -52,26 +52,23 @@ def draw_border_info():
 
 # [^^] possibly merge into a larger function when reading in the data?
 def codetype(code):
-    if (code == import_magic):
+    if (int(code) == import_magic):
        importdata()
-    if (code == export_magic):
+    if (int(code) == export_magic):
         exportdata()
 
 def isspecial(code):
-    if(code == import_magic or code == export_magic):
+    if(int(code) == import_magic or int(code) == export_magic):
         return 1
 
 # Mounts the thumb drive connected to the raspberry pi for
 # database extraction
 def mountdrives():
-    volume_name = commands.getstatusoutput('ls /dev/disk/by-label')
-    pointstring = "ls -al /dev/disk/by-label | grep {0}".format(volume_name[1])
-    # extract device name from raw file listing
-    # [~~] any better way to accomplish this? grep? str tokenizer?
-    mountpointtuple = commands.getstatusoutput(pointstring)
-    mountstring = "sudo mount /dev/{0} /media/usb".format(str((mountpointtuple[1]).split("/")))
-    outputstatus=(commands.getstatusoutput(mountstring))[0]
-	
+    mountpointstring= "ls -lA /dev/disk/by-label/ | perl -i -p -e 's/\n//' | sed -e 's/.*\///g"
+    mountpoint=commands.getstatusoutput(mountpointstring)
+    mountingstring="sudo mount -t vfat {0} /media/usb".format(str(mountpoint[0]))
+    outputstatus=commands.getstatusoutput(mountingstring)
+
 def unmountdrives():
     unmountresult=commands.getstatusoutput("umount /media/usb")
     
@@ -91,7 +88,7 @@ def exportdata():
     unmountdrives()
     curwindow.addstr(13,35,"DRIVES UNMOUNTED", curses.color_pair(2))
     curwindow.addstr(13,36,"RESUMING NORMAL OPERATION", curses.color_pair(2))
-
+    curwindow.refresh()
 
 def mysql_connect(hostname, username, password, database):
     return mdb.connect(hostname, username, password, database)
