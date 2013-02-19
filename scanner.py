@@ -66,7 +66,7 @@ def isspecial(code):
 def mountdrives():
     mountpointstring= "ls -lA /dev/disk/by-label/ | perl -i -p -e 's/\n//' | sed -e 's/.*\///g"
     mountpoint=commands.getstatusoutput(mountpointstring)
-    mountingstring="sudo mount -t vfat {0} /media/usb".format(str(mountpoint[0]))
+    mountingstring="sudo mount -t vfat /dev/{0} /media/usb".format(str(mountpoint[1]))
     outputstatus=commands.getstatusoutput(mountingstring)
 
 def unmountdrives():
@@ -80,8 +80,8 @@ def importdata():
 def exportdata():
     mountdrives()
     draw_border_info()
-    curses.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
-    curses.addstr(13,36,"EXPORTING SCAN DATA", curses.color_pair(2))
+    curwindow.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
+    curwindow.addstr(13,36,"EXPORTING SCAN DATA", curses.color_pair(2))
     curwindow.refresh()
     dumpresult=commands.getstatusoutput("sudo mysqldump -h localhost -u root >/media/usb/sqldump")
     draw_border_info()
@@ -114,7 +114,7 @@ while 1 is 1:
 	mysql_cursor = mysql_connection.cursor()
 	mysql_cursor.execute("use scanner")
         card_id = curwindow.getstr()
-        if(isspecial(card_id) is 1):    
+        if(isspecial(card_id) == 1):    
             codetype(card_id)
             card_id = curwindow.getstr()
         draw_border_info()
