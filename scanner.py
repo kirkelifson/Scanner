@@ -70,7 +70,7 @@ def mountdrives():
     outputstatus=commands.getstatusoutput(mountingstring)
 
 def unmountdrives():
-    unmountresult=commands.getstatusoutput("umount /media/usb")
+    unmountresult=commands.getstatusoutput("sudo umount /media/usb")
     
 def importdata():
     return 0
@@ -83,7 +83,7 @@ def exportdata():
     curses.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
     curses.addstr(13,36,"EXPORTING SCAN DATA", curses.color_pair(2))
     curwindow.refresh()
-    dumpresult=commands.getstatusoutput("mysqldump -h localhost -u root >/media/usb/sqldump")
+    dumpresult=commands.getstatusoutput("sudo mysqldump -h localhost -u root >/media/usb/sqldump")
     draw_border_info()
     unmountdrives()
     curwindow.addstr(13,35,"DRIVES UNMOUNTED", curses.color_pair(2))
