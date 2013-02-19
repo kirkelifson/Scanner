@@ -52,29 +52,43 @@ def draw_border_info():
 
 # [^^] possibly merge into a larger function when reading in the data?
 def codetype(code):
-    if (code is import_magic):
-        importdata()
-    elif (code is export_magic):
+    if (int(code) == import_magic):
+       importdata()
+    if (int(code) == export_magic):
         exportdata()
+
+def isspecial(code):
+    if(int(code) == import_magic or int(code) == export_magic):
+        return 1
 
 # Mounts the thumb drive connected to the raspberry pi for
 # database extraction
 def mountdrives():
-    volume_name = commands.getstatusoutput('ls /dev/disk/by-label')
-    pointstring = "ls -al /dev/disk/by-label | grep {0}".format(volume_name[1])
+    mountpointstring= "ls -lA /dev/disk/by-label/ | perl -i -p -e 's/\n//' | sed -e 's/.*\///g'"
+    mountpoint=commands.getstatusoutput(mountpointstring)
+    mountingstring="sudo mount -t vfat /dev/{0} /media/usb".format(str(mountpoint[1]))
+    outputstatus=commands.getstatusoutput(mountingstring)
 
-    # extract device name from raw file listing
-    # [~~] any better way to accomplish this? grep? str tokenizer?
-    mountpointtuple = commands.getstatusoutput(pointstring)
-    mountpoint = str(mountpointtuple[1])
-    mountpointlst = mountpoint.split(" ")
-    mountpoint = mountpointlst[12]
-    mountpoint = mountpoint.lstrip("../")
-    mountstring = "sudo mount /dev/{0} /media/usb".format(mountpoint)
+def unmountdrives():
+    unmountresult=commands.getstatusoutput("sudo umount /media/usb")
+    
+def importdata():
+    return 0
 
-#def importdata():
 
-#def exportdata():
+
+def exportdata():
+    mountdrives()
+    draw_border_info()
+    curwindow.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
+    curwindow.addstr(13,36,"EXPORTING SCAN DATA", curses.color_pair(2))
+    curwindow.refresh()
+    dumpresult=commands.getstatusoutput("sudo mysqldump -h localhost -u root >/media/usb/sqldump")
+    draw_border_info()
+    unmountdrives()
+    curwindow.addstr(13,35,"DRIVES UNMOUNTED", curses.color_pair(2))
+    curwindow.addstr(13,36,"RESUMING NORMAL OPERATION", curses.color_pair(2))
+    curwindow.refresh()
 
 def mysql_connect(hostname, username, password, database):
     return mdb.connect(hostname, username, password, database)
@@ -85,11 +99,9 @@ def mysql_connect(hostname, username, password, database):
 """
 
 # Define static global vars and sockets
-location_id = socket.gethostname()
-mysql_connection = mysql_connect('localhost', 'pi', '', 'scanner')
-mysql_cursor = mysql_connection.cursor()
-mysql_cursor.execute("use scanner")
-
+#location_id = socket.gethostname()
+location_id=00
+mysql_connection=None
 curses_startup()
 status_color = 0
 
@@ -98,28 +110,31 @@ while 1 is 1:
     #      over the entire process, it should be divided into subroutines
 
     try:
-        draw_border_info()
+        mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
+	mysql_cursor = mysql_connection.cursor()
+	mysql_cursor.execute("use scanner")
         card_id = curwindow.getstr()
-
-        # [^^] move idcheck into a separate subroutine
-        idcheck = "SELECT * FROM scanner WHERE card_id = {0}".format(card_id)
-        cur.execute(idcheck)
-        checkresult = cur.fetchone()
-
+        if(isspecial(card_id) == 1):    
+            codetype(card_id)
+            card_id = curwindow.getstr()
+        draw_border_info()
+	# [^^] move idcheck into a separate subroutine
+        idcheck = "SELECT * FROM scan_data WHERE card_id = {0}".format(card_id)
+        mysql_cursor.execute(idcheck)
+        checkresult = mysql_cursor.fetchone()
         if checkresult is None:
-            sqlstring = "INSERT INTO scanner (card_id, punch_in_or_out, location_code) VALUES({0}, 'ACCEPTED', {1});".format(card_id, location_id)
+            sqlstring = "INSERT INTO scan_data (card_id, scan_type, location_code) VALUES({0}, 'ACCEPTED', {1});".format(card_id, location_id)
             status = "Accepted"
-            status_color = 3
-
+            status_color =3 
         elif checkresult is not None:
-            sqlstring = "INSERT INTO scanner (card_id, punch_in_or_out, location_code) VALUES({0}, 'REJECTED', {1});".format(card_id, location_id)
+            sqlstring = "INSERT INTO scan_data (card_id, scan_type, location_code) VALUES({0}, 'REJECTED', {1});".format(card_id, location_id)
             status = "Not Accepted"
             status_color = 2
-            screen_text = "User: {0} scan {1}".format(card_id,status)
-            curwindow.addstr(14, 27, screen_text, curses.color_pair(status_color))
-            curwindow.refresh()
-            cur.execute(sqlstring)
-            mysql_connection.commit()
+	screen_text = "User: {0} scan {1}".format(card_id,status)
+        curwindow.addstr(14, 27, screen_text, curses.color_pair(status_color))
+        curwindow.refresh()
+        mysql_cursor.execute(sqlstring)
+        mysql_connection.commit()
 
     except mdb.Error, e:
         curses.endwin()
