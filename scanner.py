@@ -131,7 +131,7 @@ while 1 is 1:
             status = "Not Accepted"
             status_color = 2
 	screen_text = "User: {0} scan {1}".format(card_id,status)
-        curwindow.addstr(14, 27, screen_text, curses.color_pair(status_color))
+        curwindow.addstr(12, 27, screen_text, curses.color_pair(status_color))
         curwindow.refresh()
         mysql_cursor.execute(sqlstring)
         mysql_connection.commit()
