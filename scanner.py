@@ -83,7 +83,7 @@ def exportdata():
     curwindow.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
     curwindow.addstr(13,36,"EXPORTING SCAN DATA", curses.color_pair(2))
     curwindow.refresh()
-    dumpresult=commands.getstatusoutput("sudo mysqldump -h localhost -u root >/media/usb/sqldump")
+    dumpresult=commands.getstatusoutput("sudo mysqldump -h localhost -u root scanner >/media/usb/sqldump")
     draw_border_info()
     unmountdrives()
     curwindow.addstr(13,35,"DRIVES UNMOUNTED", curses.color_pair(2))
