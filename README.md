@@ -12,6 +12,7 @@ verifying lunch line fluidity).
 - MySQL interface
 - Raspberry Pi
 - Barcode scanner
+- $81.30 per unit (delivered).
 
 ##To-do:
 - Create import/export functions for managing barcode scans during check-in/check-out
