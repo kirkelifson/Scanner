@@ -21,6 +21,8 @@ Version: 0.2 [02/03/13]
 
 import_magic = 9780801993077
 export_magic = 9780745612959
+second_magic = 9780151392636 
+seconds_status = 0
 
 curwindow = curses.initscr()
 
@@ -56,9 +58,12 @@ def codetype(code):
        importdata()
     if (int(code) == export_magic):
         exportdata()
+    if (int(code) == second_magic):
+        toggle_seconds()
+
 
 def isspecial(code):
-    if(int(code) == import_magic or int(code) == export_magic):
+    if(int(code) == import_magic or int(code) == export_magic or int(code) == second_magic):
         return 1
 
 # Mounts the thumb drive connected to the raspberry pi for
@@ -75,15 +80,24 @@ def unmountdrives():
 def importdata():
     return 0
 
-
-
+def toggle_seconds(int(code)):
+    seconds_status ^= 1
+    if (seconds_status == 1):
+        curwindow.draw_border_info()
+        curwindow.addstr(13,35,"SECONDS ENABLED", curses.color_pair(3))
+        curwindow.refresh()
+    else:
+        curwindow.draw_border_info()
+        curwindow.addstr(13,35,"SECONDS DISABLED", curses.color_pair(3))
+        curwindow.refresh()
+    
 def exportdata():
     mountdrives()
     draw_border_info()
     curwindow.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
     curwindow.addstr(13,36,"EXPORTING SCAN DATA", curses.color_pair(2))
     curwindow.refresh()
-    dumpresult=commands.getstatusoutput("sudo mysqldump -h localhost -u root >/media/usb/sqldump")
+    dumpresult=commands.getstatusoutput("sudo mysqldump -h localhost -u root scanner >/media/usb/sqldump")
     draw_border_info()
     unmountdrives()
     curwindow.addstr(13,35,"DRIVES UNMOUNTED", curses.color_pair(2))
@@ -127,9 +141,12 @@ while 1 is 1:
             status = "Accepted"
             status_color =3 
         elif checkresult is not None:
-            sqlstring = "INSERT INTO scan_data (card_id, scan_type, location_code) VALUES({0}, 'REJECTED', {1});".format(card_id, location_id)
-            status = "Not Accepted"
-            status_color = 2
+            if(seconds_status == 0):
+                sqlstring = "INSERT INTO scan_data (card_id, scan_type, location_code) VALUES({0}, 'REJECTED', {1});".format(card_id, location_id)
+                status = "Not Accepted"
+                status_color = 2
+            else:
+                sqlstring = "INSERT INTO scan_data (card_id, scan_type, location_code, seconds) VALUES({0}, 'ACCEPTED', {1}, 1);".format(card_id, location_id)
 	screen_text = "User: {0} scan {1}".format(card_id,status)
         curwindow.addstr(12, 27, screen_text, curses.color_pair(status_color))
         curwindow.refresh()
