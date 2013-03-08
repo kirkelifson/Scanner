@@ -19,6 +19,12 @@ Version: 0.2 [02/03/13]
 
 """
 
+# Define static global vars and sockets
+location_id = socket.gethostname()
+mysql_connection = None
+curses_startup()
+status_color = 0
+
 import_magic = 9780801993077
 export_magic = 9780745612959
 
@@ -27,7 +33,8 @@ curwindow = curses.initscr()
 # panic(string error_string, int error_code)
 # Exits the program and displays the error code that was thrown along with a description
 def panic(error_string, error_code):
-    print "[!!] %d: %s\n" % (error_code, error_string)
+    string = "[!!] {0}: {1}".format(error_code, error_string)
+    print(string)
     sys.exit(error_code)
 
 # Initializes ncurses and displays version information on startup
@@ -50,7 +57,6 @@ def draw_border_info():
     curwindow.addstr(1, 23, "Checkpoint version 0.2", curses.color_pair(1))
     curwindow.refresh()
 
-# [^^] possibly merge into a larger function when reading in the data?
 def codetype(code):
     if (int(code) == import_magic):
        importdata()
@@ -73,42 +79,37 @@ def unmountdrives():
     unmountresult=commands.getstatusoutput("sudo umount /media/usb")
     
 def importdata():
+    mountdrives()
+    draw_border_info()
+    curwindow.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
+    curwindow.addstr(14,36,"IMPORTING SCAN DATA", curses.color_pair(2))
+    curwindow.refresh()
+    import_string = "sudo mysql -h localhost -u root scanner < /media/usb/{0}.sql".format(location_id)
+    dumpresult=commands.getstatusoutput(import_string)
+    draw_border_info()
+    unmountdrives()
+    curwindow.addstr(13,35,"DRIVES UNMOUNTED", curses.color_pair(2))
+    curwindow.addstr(14,36,"RESUMING NORMAL OPERATION", curses.color_pair(2))
+    curwindow.refresh()
     return 0
-
-
 
 def exportdata():
     mountdrives()
     draw_border_info()
     curwindow.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
-    curwindow.addstr(13,36,"EXPORTING SCAN DATA", curses.color_pair(2))
+    curwindow.addstr(14,36,"EXPORTING SCAN DATA", curses.color_pair(2))
     curwindow.refresh()
     dumpresult=commands.getstatusoutput("sudo mysqldump -h localhost -u root scanner >/media/usb/sqldump")
     draw_border_info()
     unmountdrives()
     curwindow.addstr(13,35,"DRIVES UNMOUNTED", curses.color_pair(2))
-    curwindow.addstr(13,36,"RESUMING NORMAL OPERATION", curses.color_pair(2))
+    curwindow.addstr(14,36,"RESUMING NORMAL OPERATION", curses.color_pair(2))
     curwindow.refresh()
 
 def mysql_connect(hostname, username, password, database):
     return mdb.connect(hostname, username, password, database)
 
-"""
-    todo:
-        - define functions for separate mysql processes
-"""
-
-# Define static global vars and sockets
-#location_id = socket.gethostname()
-location_id=00
-mysql_connection=None
-curses_startup()
-status_color = 0
-
 while 1 is 1:
-    # [~~] I don't believe that we need to have exception handling
-    #      over the entire process, it should be divided into subroutines
-
     try:
         mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
 	mysql_cursor = mysql_connection.cursor()
@@ -118,14 +119,14 @@ while 1 is 1:
             codetype(card_id)
             card_id = curwindow.getstr()
         draw_border_info()
-	# [^^] move idcheck into a separate subroutine
+
         idcheck = "SELECT * FROM scan_data WHERE card_id = {0}".format(card_id)
         mysql_cursor.execute(idcheck)
         checkresult = mysql_cursor.fetchone()
         if checkresult is None:
             sqlstring = "INSERT INTO scan_data (card_id, scan_type, location_code) VALUES({0}, 'ACCEPTED', {1});".format(card_id, location_id)
             status = "Accepted"
-            status_color =3 
+            status_color = 3
         elif checkresult is not None:
             sqlstring = "INSERT INTO scan_data (card_id, scan_type, location_code) VALUES({0}, 'REJECTED', {1});".format(card_id, location_id)
             status = "Not Accepted"
@@ -142,7 +143,6 @@ while 1 is 1:
         panic(e, 1)
 
     finally:
-        # [~~] how would we not have a mysql connection?
         if mysql_connection:
             mysql_connection.close()
             curses.endwin()
