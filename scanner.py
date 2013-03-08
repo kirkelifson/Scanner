@@ -22,13 +22,13 @@ Version: 0.2 [02/03/13]
 # Define static global vars and sockets
 location_id = socket.gethostname()
 mysql_connection = None
-curses_startup()
 status_color = 0
 
 import_magic = 9780801993077
 export_magic = 9780745612959
 
 curwindow = curses.initscr()
+curses_startup()
 
 # panic(string error_string, int error_code)
 # Exits the program and displays the error code that was thrown along with a description
