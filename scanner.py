@@ -80,7 +80,8 @@ def unmountdrives():
 def importdata():
     return 0
 
-def toggle_seconds(int(code)):
+def toggle_seconds(code):
+    code=int(code)
     seconds_status ^= 1
     if (seconds_status == 1):
         curwindow.draw_border_info()
