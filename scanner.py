@@ -59,7 +59,7 @@ def codetype(code):
     if (int(code) == export_magic):
         exportdata()
     if (int(code) == second_magic):
-        toggle_seconds()
+        toggle_seconds(code)
 
 
 def isspecial(code):
