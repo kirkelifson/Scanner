@@ -69,41 +69,41 @@ def isspecial(code):
 # Mounts the thumb drive connected to the raspberry pi for
 # database extraction
 def mountdrives():
-    mountpointstring= "ls -lA /dev/disk/by-label/ | perl -i -p -e 's/\n//' | sed -e 's/.*\///g'"
-    mountpoint=commands.getstatusoutput(mountpointstring)
-    mountingstring="sudo mount -t vfat /dev/{0} /media/usb".format(str(mountpoint[1]))
-    outputstatus=commands.getstatusoutput(mountingstring)
+    mountpointstring = "ls -lA /dev/disk/by-label/ | perl -i -p -e 's/\n//' | sed -e 's/.*\///g'"
+    mountpoint = commands.getstatusoutput(mountpointstring)
+    mountingstring = "sudo mount -t vfat /dev/{0} /media/usb".format(str(mountpoint[1]))
+    outputstatus = commands.getstatusoutput(mountingstring)
 
 def unmountdrives():
-    unmountresult=commands.getstatusoutput("sudo umount /media/usb")
+    unmountresult = commands.getstatusoutput("sudo umount /media/usb")
     
 def importdata():
     mountdrives()
     draw_border_info()
-    curwindow.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
-    curwindow.addstr(14,36,"IMPORTING SCAN DATA", curses.color_pair(2))
+    curwindow.addstr(13, 35, "DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
+    curwindow.addstr(14, 36, "IMPORTING SCAN DATA", curses.color_pair(2))
     curwindow.refresh()
     import_string = "sudo mysql -h localhost -u root scanner < /media/usb/auth_id"
-    dumpresult=commands.getstatusoutput(import_string)
+    dumpresult = commands.getstatusoutput(import_string)
     draw_border_info()
     unmountdrives()
-    curwindow.addstr(13,35,"DRIVES UNMOUNTED", curses.color_pair(2))
-    curwindow.addstr(14,36,"RESUMING NORMAL OPERATION", curses.color_pair(2))
+    curwindow.addstr(13, 35, "DRIVES UNMOUNTED", curses.color_pair(2))
+    curwindow.addstr(14, 36, "RESUMING NORMAL OPERATION", curses.color_pair(2))
     curwindow.refresh()
     return 0
 
 def exportdata():
     mountdrives()
     draw_border_info()
-    curwindow.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
-    curwindow.addstr(14,36,"EXPORTING SCAN DATA", curses.color_pair(2))
+    curwindow.addstr(13, 35, "DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
+    curwindow.addstr(14, 36, "EXPORTING SCAN DATA", curses.color_pair(2))
     curwindow.refresh()
     dump_string = "sudo mysqldump -h localhost -u root scanner >/media/usb/sqldump/{0}.sql".format(location_id)
-    dumpresult=commands.getstatusoutput(dump_string)
+    dumpresult = commands.getstatusoutput(dump_string)
     draw_border_info()
     unmountdrives()
-    curwindow.addstr(13,35,"DRIVES UNMOUNTED", curses.color_pair(2))
-    curwindow.addstr(14,36,"RESUMING NORMAL OPERATION", curses.color_pair(2))
+    curwindow.addstr(13, 35, "DRIVES UNMOUNTED", curses.color_pair(2))
+    curwindow.addstr(14, 36, "RESUMING NORMAL OPERATION", curses.color_pair(2))
     curwindow.refresh()
 
 def mysql_connect(hostname, username, password, database):
