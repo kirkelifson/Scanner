@@ -28,7 +28,6 @@ import_magic = 9780801993077
 export_magic = 9780745612959
 
 curwindow = curses.initscr()
-curses_startup()
 
 # panic(string error_string, int error_code)
 # Exits the program and displays the error code that was thrown along with a description
@@ -110,6 +109,7 @@ def exportdata():
 def mysql_connect(hostname, username, password, database):
     return mdb.connect(hostname, username, password, database)
 
+curses_startup()
 while 1 is 1:
     try:
         mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
