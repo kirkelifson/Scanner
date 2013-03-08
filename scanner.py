@@ -84,7 +84,7 @@ def importdata():
     curwindow.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
     curwindow.addstr(14,36,"IMPORTING SCAN DATA", curses.color_pair(2))
     curwindow.refresh()
-    import_string = "sudo mysql -h localhost -u root scanner < /media/usb/{0}.sql".format(location_id)
+    import_string = "sudo mysql -h localhost -u root scanner < /media/usb/auth_id"
     dumpresult=commands.getstatusoutput(import_string)
     draw_border_info()
     unmountdrives()
