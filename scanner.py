@@ -18,6 +18,9 @@ of attendees at Order of the Arrow events for Seminole Lodge 85.
 Version: 0.2 [02/03/13]
 
 """
+location_id = socket.gethostname()
+mysql_connection = None
+status_color = 0
 
 import_magic = 9780801993077
 export_magic = 9780745612959
@@ -78,6 +81,18 @@ def unmountdrives():
     unmountresult=commands.getstatusoutput("sudo umount /media/usb")
     
 def importdata():
+    mountdrives()
+    draw_border_info()
+    curwindow.addstr(13, 35, "DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
+    curwindow.addstr(14, 35, "IMPORTING SCAN DATA", curses.color_pair(2))
+    curwindow.refresh()
+    import_string = "sudo mysql -h localhost -u root scanner < /media/usb/auth_id"
+    dumpresult = commands.getstatusoutput(import_string)
+    draw_border_info()
+    unmountdrives()
+    curwindow.addstr(13, 35, "DRIVES UNMOUNTED", curses.color_pair(2))
+    curwindow.addstr(14, 35, "RESUMING NORMAL OPERATION", curses.color_pair(2))
+    curwindow.refresh()
     return 0
 
 def toggle_seconds(code):
@@ -96,34 +111,22 @@ def exportdata():
     mountdrives()
     draw_border_info()
     curwindow.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
-    curwindow.addstr(13,36,"EXPORTING SCAN DATA", curses.color_pair(2))
+    curwindow.addstr(14,35,"EXPORTING SCAN DATA", curses.color_pair(2))
     curwindow.refresh()
-    dumpresult=commands.getstatusoutput("sudo mysqldump -h localhost -u root scanner >/media/usb/sqldump")
+    dumprstring = "sudo mysqldump -h localhost -u root scanner >/media/usb/{0}.sql".format(location_id)
+    dumpresult = commands.getstatusoutput(dumpstring)
     draw_border_info()
     unmountdrives()
     curwindow.addstr(13,35,"DRIVES UNMOUNTED", curses.color_pair(2))
-    curwindow.addstr(13,36,"RESUMING NORMAL OPERATION", curses.color_pair(2))
+    curwindow.addstr(14,35,"RESUMING NORMAL OPERATION", curses.color_pair(2))
     curwindow.refresh()
 
 def mysql_connect(hostname, username, password, database):
     return mdb.connect(hostname, username, password, database)
 
-"""
-    todo:
-        - define functions for separate mysql processes
-"""
-
-# Define static global vars and sockets
-#location_id = socket.gethostname()
-location_id=00
-mysql_connection=None
 curses_startup()
-status_color = 0
 
 while 1 is 1:
-    # [~~] I don't believe that we need to have exception handling
-    #      over the entire process, it should be divided into subroutines
-
     try:
         mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
 	mysql_cursor = mysql_connection.cursor()
@@ -133,7 +136,6 @@ while 1 is 1:
             codetype(card_id)
             card_id = curwindow.getstr()
         draw_border_info()
-	# [^^] move idcheck into a separate subroutine
         idcheck = "SELECT * FROM scan_data WHERE card_id = {0}".format(card_id)
         mysql_cursor.execute(idcheck)
         checkresult = mysql_cursor.fetchone()
