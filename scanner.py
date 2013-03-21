@@ -15,15 +15,14 @@ not been previously checked in. This program will assist in keeping track
 of attendees at Order of the Arrow events for Seminole Lodge 85.
 
 Version: 0.2 [02/03/13]
-
 """
+
 # Define static global vars and sockets
 location_id = socket.gethostname()
 mysql_connection = None
 
 import_magic = 9780801993077
 export_magic = 9780745612959
-
 
 # panic(string error_string, int error_code)
 # Exits the program and displays the error code that was thrown along with a description
@@ -37,6 +36,7 @@ def codetype(code):
     if (int(code) == import_magic):
        importdata()
     if (int(code) == export_magic):
+        exportdata()
 
 def isspecial(code):
     if(int(code) == import_magic or int(code) == export_magic):
@@ -93,11 +93,9 @@ while 1 is 1:
         mysql_connection.commit()
 
     except mdb.Error, e:
-        curses.endwin()
         mysql_connection.rollback()
         panic(e, 1)
 
     finally:
         if mysql_connection:
             mysql_connection.close()
-            curses.endwin()
