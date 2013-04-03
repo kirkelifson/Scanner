@@ -20,10 +20,9 @@ def panic(error_string, error_code):
     sys.exit(error_code)
 
 def barcode_input(code):
-    # switch statement in python?
     if (int(code) == import_magic):
         import_data()
-    if (int(code) == export_magic):
+    elif (int(code) == export_magic):
         export_data()
 
 # mount the thumb drive connected to the raspberry pi
@@ -63,12 +62,11 @@ while 1 is 1:
         card_id = input('> ')
         barcode_input(card_id)
         card_id = curwindow.getstr()
+        # time = date()
 
         # table layout /
         #   scan (id, barcode, location, [time])
 
-        # time = date()
-        # no longer need to verify scan
         # check for duplicate scans'
 
         # input scan data into table
