@@ -4,6 +4,7 @@ import MySQLdb as mysql
 import sys
 import commands
 import socket
+import time
 
 # define static global vars and sockets
 location_id = socket.gethostname()
@@ -50,27 +51,26 @@ def export_data():
 def mysql_connect(hostname, username, password, database):
     return mysql.connect(hostname, username, password, database)
 
+# connect to mysql database
+mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
+mysql_cursor = mysql_connection.cursor()
+mysql_cursor.execute("use scanner")
+
 while 1 is 1:
     try:
-        # initialize mysql connection
-        # possibly move outside of loop?
-        mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
-        mysql_cursor = mysql_connection.cursor()
-        mysql_cursor.execute("use scanner")
-
         # grab input from terminal
         card_id = input('> ')
         barcode_input(card_id)
         card_id = curwindow.getstr()
-        # time = date()
+        time = time.time()
 
         # table layout /
-        #   scan (id, barcode, location, [time])
+        #   scans (id, barcode, location, [time])
 
-        # check for duplicate scans'
+        # check for duplicate scans
 
         # input scan data into table
-        sqlstring = "INSERT INTO scan (barcode, location, time) VALUES({0}, {1}, {2});".format(card_id, location_id, time)
+        sqlstring = "INSERT INTO scans (barcode, location, time) VALUES({0}, {1}, {2});".format(card_id, location_id, time)
         mysql_cursor.execute(sqlstring)
         mysql_connection.commit()
 
