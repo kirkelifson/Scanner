@@ -39,7 +39,7 @@ def umount_drives():
 def import_data():
     mount_drives()
     import_string = "sudo mysql -h localhost -u root scanner < /media/usb/auth_id"
-    dump_result   = commands.getstatusoutput(import_string)
+    import_result = commands.getstatusoutput(import_string)
     umount_drives()
 
 def export_data():
