@@ -15,7 +15,4 @@ verifying lunch line fluidity).
 - $81.30 per unit (delivered).
 
 ##To-do:
-- Create import/export functions for managing barcode scans during check-in/check-out
-- Attempt to clean up ncurses boiler-plate
 - Implement separate mysql functions for individual tasks (verify nobody has checked in twice in a session, etc)
-- Clean up code by using global variables, rearranging function defintions, etc.
