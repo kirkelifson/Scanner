@@ -61,7 +61,6 @@ while 1 is 1:
         # grab input from terminal
         card_id = input('> ')
         barcode_input(card_id)
-        card_id = curwindow.getstr()
         time = time.time()
 
         # table layout /
@@ -70,7 +69,7 @@ while 1 is 1:
         # check for duplicate scans
 
         # input scan data into table
-        sqlstring = "INSERT INTO scans (barcode, location, time) VALUES({0}, {1}, {2});".format(card_id, location_id, time)
+        sqlstring = "INSERT INTO scans (barcode, location, time) VALUES({0}, '{1}', {2});".format(card_id, location_id, time)
         mysql_cursor.execute(sqlstring)
         mysql_connection.commit()
 
