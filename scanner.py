@@ -67,6 +67,8 @@ while 1 is 1:
         #   scans (id, barcode, location, [time])
 
         # check for duplicate scans
+        # time difference between last scan?
+        # if < 5 sec && same code, deny
 
         # input scan data into table
         sqlstring = "INSERT INTO scans (barcode, location, time) VALUES({0}, '{1}', {2});".format(card_id, location_id, time)
