@@ -21,32 +21,32 @@ def panic(error_string, error_code):
     sys.exit(error_code)
 
 def barcode_input(code):
-    if (int(code) == import_magic):
+    if   (int(code) == import_magic):
         import_data()
     elif (int(code) == export_magic):
         export_data()
 
 # mount the thumb drive connected to the raspberry pi
-def mount_drives():
+def mount_drive():
     mount_grep  = "ls -lA /dev/disk/by-label/ | perl -i -p -e 's/\n//' | sed -e 's/.*\///g'"
     mount_point = commands.getstatusoutput(mount_grep)
     mount_cmd   = "sudo mount -t vfat /dev/{0} /media/usb".format(str(mount_point[1]))
     mount_ret   = commands.getstatusoutput(mount_cmd)
 
-def umount_drives():
+def umount_drive():
     unmount_ret = commands.getstatusoutput("sudo umount /media/usb")
     
 def import_data():
-    mount_drives()
+    mount_drive()
     import_string = "sudo mysql -h localhost -u root scanner < /media/usb/auth_id"
     import_result = commands.getstatusoutput(import_string)
-    umount_drives()
+    umount_drive()
 
 def export_data():
-    mount_drives()
+    mount_drive()
     dump_string = "sudo mysqldump -h localhost -u root scanner > /media/usb/{0}.sql".format(location_id)
     dump_result = commands.getstatusoutput(dump_string)
-    umount_drives()
+    umount_drive()
 
 def mysql_connect(hostname, username, password, database):
     return mysql.connect(hostname, username, password, database)
