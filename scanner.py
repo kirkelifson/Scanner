@@ -10,8 +10,9 @@ import time
 location_id = socket.gethostname()
 mysql_connection = None
 
-import_magic = 9780801993077
-export_magic = 9780745612959
+import_magic   = 9780801993077
+export_magic   = 9780745612959
+location_magic = 9781027298277
 
 # panic(string error_string, int error_code)
 # print exception and kill the script
@@ -23,8 +24,15 @@ def panic(error_string, error_code):
 def barcode_input(code):
     if   (int(code) == import_magic):
         import_data()
+        return 1
     elif (int(code) == export_magic):
         export_data()
+        return 1
+    elif (int(code) == location_magic):
+        change_location()
+        return 1
+
+    return 0
 
 # mount the thumb drive connected to the raspberry pi
 def mount_drive():
@@ -48,6 +56,12 @@ def export_data():
     dump_result = commands.getstatusoutput(dump_string)
     umount_drive()
 
+def change_location():
+    new_location = input('(new location)> ')
+    hostname_file = open("/etc/hostname", "w")
+    hostname_file.write(new_location);
+    hostname_file.close()
+
 def mysql_connect(hostname, username, password, database):
     return mysql.connect(hostname, username, password, database)
 
@@ -60,7 +74,7 @@ while 1 is 1:
     try:
         # grab input from terminal
         card_id = input('> ')
-        barcode_input(card_id)
+        special = barcode_input(card_id)
         time = time.time()
 
         # table layout /
@@ -71,7 +85,7 @@ while 1 is 1:
         # if < 5 sec && same code, deny
 
         # input scan data into table
-        sqlstring = "INSERT INTO scans (barcode, location, time) VALUES({0}, '{1}', {2});".format(card_id, location_id, time)
+        sqlstring = "INSERT INTO scans (barcode, location, time, special) VALUES({0}, '{1}', {2});".format(card_id, location_id, time, special)
         mysql_cursor.execute(sqlstring)
         mysql_connection.commit()
 
