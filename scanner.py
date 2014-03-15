@@ -10,9 +10,10 @@ import time
 location_id = socket.gethostname()
 mysql_connection = None
 
-import_magic   = 9780801993077
-export_magic   = 9780745612959
-location_magic = 9781027298277
+import_magic    = 9780801993077
+export_magic    = 9780801993078
+location_magic  = 9780801993079
+empty_magic     = 9780801993080
 
 # panic(string error_string, int error_code)
 # print exception and kill the script
@@ -24,14 +25,12 @@ def panic(error_string, error_code):
 def barcode_input(code):
     if   (int(code) == import_magic):
         import_data()
-        return 1
     elif (int(code) == export_magic):
         export_data()
-        return 1
     elif (int(code) == location_magic):
         change_location()
-        return 1
-
+    elif (int(code) == empty_magic):
+        empty_database()
     return 0
 
 # mount the thumb drive connected to the raspberry pi
@@ -46,13 +45,13 @@ def umount_drive():
     
 def import_data():
     mount_drive()
-    import_string = "sudo mysql -h localhost -u root scanner < /media/usb/auth_id"
+    import_string = "sudo mysql -u root scanner < /media/usb/auth_id"
     import_result = commands.getstatusoutput(import_string)
     umount_drive()
 
 def export_data():
     mount_drive()
-    dump_string = "sudo mysqldump -h localhost -u root scanner > /media/usb/{0}.sql".format(location_id)
+    dump_string = "sudo mysqldump -u root scanner > /media/usb/{0}.sql".format(location_id)
     dump_result = commands.getstatusoutput(dump_string)
     umount_drive()
 
@@ -61,6 +60,7 @@ def change_location():
     hostname_file = open("/etc/hostname", "w")
     hostname_file.write(new_location);
     hostname_file.close()
+    location_id = new_location
 
 def mysql_connect(hostname, username, password, database):
     return mysql.connect(hostname, username, password, database)
@@ -70,15 +70,15 @@ mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
 mysql_cursor = mysql_connection.cursor()
 mysql_cursor.execute("use scanner")
 
-while 1 is 1:
+while 1:
     try:
         # grab input from terminal
         card_id = input('> ')
         special = barcode_input(card_id)
         time = time.time()
 
-        # table layout /
-        #   scans (id, barcode, location, [time])
+        # table layout:
+        #   scans (id, barcode, location, timestamp, flag)
 
         # check for duplicate scans
         # time difference between last scan?
