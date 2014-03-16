@@ -1,185 +1,98 @@
 #!/usr/bin/python
 
-import MySQLdb as mdb
+import MySQLdb as mysql
 import sys
-import curses
 import commands
 import socket
+import time
 
-"""
-Description:
-
-scanner.py runs on an individual Raspberry Pi station which is designed
-to read barcodes from ID badges. Once the code is scanned the attendee
-will be cross-checked with the database to verify that he or she has
-not been previously checked in. This program will assist in keeping track
-of attendees at Order of the Arrow events for Seminole Lodge 85.
-
-Version: 0.2 [02/03/13]
-
-"""
+# define static global vars and sockets
 location_id = socket.gethostname()
 mysql_connection = None
-status_color = 0
 
-# Define static global vars and sockets
-location_id = socket.gethostname()
-mysql_connection = None
-status_color = 0
-
-import_magic = 9780801993077
-export_magic = 9780745612959
-second_magic = 9780151392636 
-seconds_status = 0
-
-curwindow = curses.initscr()
+import_magic    = 9780801993077
+export_magic    = 9780801993078
+location_magic  = 9780801993079
+empty_magic     = 9780801993080
 
 # panic(string error_string, int error_code)
-# Exits the program and displays the error code that was thrown along with a description
+# print exception and kill the script
 def panic(error_string, error_code):
-    string = "[!!] {0}: {1}".format(error_code, error_string)
+    string = "[!] {0}: {1}".format(error_code, error_string)
     print(string)
     sys.exit(error_code)
 
-# Initializes ncurses and displays version information on startup
-def curses_startup():
-    curwindow.border(0)
-    curses.start_color()
-    curses.noecho()
-    curses.curs_set(0)
-    curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
-    curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
-    curwindow.addstr(1, 23, "Checkpoint version 0.2", curses.color_pair(1))
-    curwindow.addstr(13, 35, "READY", curses.color_pair(1))
-    curwindow.keypad(1)
-    curwindow.refresh()
-
-def draw_border_info():
-    curwindow.clear()
-    curwindow.border(0)
-    curwindow.addstr(1, 23, "Checkpoint version 0.2", curses.color_pair(1))
-    curwindow.refresh()
-
-def codetype(code):
-    if (int(code) == import_magic):
-       importdata()
-    if (int(code) == export_magic):
-        exportdata()
-    if (int(code) == second_magic):
-        toggle_seconds(code)
-
-
-def isspecial(code):
-    if(int(code) == import_magic or int(code) == export_magic or int(code) == second_magic):
-        return 1
-
-# Mounts the thumb drive connected to the raspberry pi for
-# database extraction
-def mountdrives():
-    mountpointstring = "ls -lA /dev/disk/by-label/ | perl -i -p -e 's/\n//' | sed -e 's/.*\///g'"
-    mountpoint = commands.getstatusoutput(mountpointstring)
-    mountingstring = "sudo mount -t vfat /dev/{0} /media/usb".format(str(mountpoint[1]))
-    outputstatus = commands.getstatusoutput(mountingstring)
-
-def unmountdrives():
-    unmountresult = commands.getstatusoutput("sudo umount /media/usb")
-    
-def importdata():
-    mountdrives()
-    draw_border_info()
-    curwindow.addstr(13, 35, "DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
-    curwindow.addstr(14, 36, "IMPORTING SCAN DATA", curses.color_pair(2))
-    curwindow.refresh()
-    import_string = "sudo mysql -h localhost -u root scanner < /media/usb/auth_id"
-    dumpresult = commands.getstatusoutput(import_string)
-    draw_border_info()
-    unmountdrives()
-    curwindow.addstr(14, 36, "RESUMING NORMAL OPERATION", curses.color_pair(2))
-    curwindow.refresh()
+def barcode_input(code):
+    if   (int(code) == import_magic):
+        import_data()
+    elif (int(code) == export_magic):
+        export_data()
+    elif (int(code) == location_magic):
+        change_location()
+    elif (int(code) == empty_magic):
+        empty_database()
     return 0
 
-def exportdata():
-    mountdrives()
-    draw_border_info()
-    curwindow.addstr(13, 35, "DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
-    curwindow.addstr(14, 36, "EXPORTING SCAN DATA", curses.color_pair(2))
-    curwindow.refresh()
-    dump_string = "sudo mysqldump -h localhost -u root scanner > /media/usb/{0}.sql".format(location_id)
-    dumpresult = commands.getstatusoutput(dump_string)
-    draw_border_info()
-    unmountdrives()
-    curwindow.addstr(13, 35, "DRIVES UNMOUNTED", curses.color_pair(2))
-    curwindow.addstr(14, 35, "RESUMING NORMAL OPERATION", curses.color_pair(2))
-    curwindow.refresh()
-    return 0
+# mount the thumb drive connected to the raspberry pi
+def mount_drive():
+    mount_grep  = "ls -lA /dev/disk/by-label/ | perl -i -p -e 's/\n//' | sed -e 's/.*\///g'"
+    mount_point = commands.getstatusoutput(mount_grep)
+    mount_cmd   = "sudo mount -t vfat /dev/{0} /media/usb".format(str(mount_point[1]))
+    mount_ret   = commands.getstatusoutput(mount_cmd)
 
-def toggle_seconds(code):
-    code=int(code)
-    seconds_status ^= 1
-    if (seconds_status == 1):
-        curwindow.draw_border_info()
-        curwindow.addstr(13,35,"SECONDS ENABLED", curses.color_pair(3))
-        curwindow.refresh()
-    else:
-        curwindow.draw_border_info()
-        curwindow.addstr(13,35,"SECONDS DISABLED", curses.color_pair(3))
-        curwindow.refresh()
+def umount_drive():
+    unmount_ret = commands.getstatusoutput("sudo umount /media/usb")
     
-def exportdata():
-    mountdrives()
-    draw_border_info()
-    curwindow.addstr(13,35,"DRIVES MOUNTED DO NOT REMOVE", curses.color_pair(2))
-    curwindow.addstr(14,35,"EXPORTING SCAN DATA", curses.color_pair(2))
-    curwindow.refresh()
-    dumprstring = "sudo mysqldump -h localhost -u root scanner >/media/usb/{0}.sql".format(location_id)
-    dumpresult = commands.getstatusoutput(dumpstring)
-    draw_border_info()
-    unmountdrives()
-    curwindow.addstr(13,35,"DRIVES UNMOUNTED", curses.color_pair(2))
-    curwindow.addstr(14,35,"RESUMING NORMAL OPERATION", curses.color_pair(2))
-    curwindow.refresh()
+def import_data():
+    mount_drive()
+    import_string = "sudo mysql -u root scanner < /media/usb/auth_id"
+    import_result = commands.getstatusoutput(import_string)
+    umount_drive()
+
+def export_data():
+    mount_drive()
+    dump_string = "sudo mysqldump -u root scanner > /media/usb/{0}.sql".format(location_id)
+    dump_result = commands.getstatusoutput(dump_string)
+    umount_drive()
+
+def change_location():
+    new_location = input('(new location)> ')
+    hostname_file = open("/etc/hostname", "w")
+    hostname_file.write(new_location);
+    hostname_file.close()
+    location_id = new_location
 
 def mysql_connect(hostname, username, password, database):
-    return mdb.connect(hostname, username, password, database)
+    return mysql.connect(hostname, username, password, database)
 
-curses_startup()
-while 1 is 1:
+# connect to mysql database
+mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
+mysql_cursor = mysql_connection.cursor()
+mysql_cursor.execute("use scanner")
+
+while 1:
     try:
-        mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
-	mysql_cursor = mysql_connection.cursor()
-	mysql_cursor.execute("use scanner")
-        card_id = curwindow.getstr()
-        if(isspecial(card_id) == 1):    
-            codetype(card_id)
-            card_id = curwindow.getstr()
-        draw_border_info()
-        idcheck = "SELECT * FROM scan_data WHERE card_id = {0}".format(card_id)
-        mysql_cursor.execute(idcheck)
-        checkresult = mysql_cursor.fetchone()
-        if checkresult is None:
-            sqlstring = "INSERT INTO scan_data (card_id, scan_type, location_code) VALUES({0}, 'ACCEPTED', {1});".format(card_id, location_id)
-            status = "Accepted"
-            status_color = 3
-        elif checkresult is not None:
-            if(seconds_status == 0):
-                sqlstring = "INSERT INTO scan_data (card_id, scan_type, location_code) VALUES({0}, 'REJECTED', {1});".format(card_id, location_id)
-                status = "Not Accepted"
-                status_color = 2
-            else:
-                sqlstring = "INSERT INTO scan_data (card_id, scan_type, location_code, seconds) VALUES({0}, 'ACCEPTED', {1}, 1);".format(card_id, location_id)
-	screen_text = "User: {0} scan {1}".format(card_id,status)
-        curwindow.addstr(12, 27, screen_text, curses.color_pair(status_color))
-        curwindow.refresh()
+        # grab input from terminal
+        card_id = input('> ')
+        special = barcode_input(card_id)
+        time = time.time()
+
+        # table layout:
+        #   scans (id, barcode, location, timestamp, flag)
+
+        # check for duplicate scans
+        # time difference between last scan?
+        # if < 5 sec && same code, deny
+
+        # input scan data into table
+        sqlstring = "INSERT INTO scans (barcode, location, time, special) VALUES({0}, '{1}', {2});".format(card_id, location_id, time, special)
         mysql_cursor.execute(sqlstring)
         mysql_connection.commit()
 
-    except mdb.Error, e:
-        curses.endwin()
+    except mysql.Error, error:
         mysql_connection.rollback()
-        panic(e, 1)
+        panic(error, 1)
 
     finally:
         if mysql_connection:
             mysql_connection.close()
-            curses.endwin()
