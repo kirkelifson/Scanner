@@ -9,7 +9,8 @@ import time
 
 # define static global vars and sockets
 location_id = socket.gethostname()
-mysql_connection = None
+mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
+mysql_cursor     = mysql_connection.cursor()
 
 import_magic    = 9780801993077
 export_magic    = 9780801993078
@@ -19,6 +20,7 @@ empty_magic     = 9780801993080
 # panic(string error_string, int error_code)
 # print exception and kill the script
 def panic(error_string, error_code):
+    mysql_connection.rollback()
     string = "[!] {0}: {1}".format(error_code, error_string)
     print(string)
     sys.exit(error_code)
@@ -28,8 +30,6 @@ def flag(code):
         import_data()
     elif (int(code) == export_magic):
         export_data()
-    elif (int(code) == location_magic):
-        change_location()
     elif (int(code) == empty_magic):
         empty_database()
 
@@ -55,22 +55,19 @@ def export_data():
     dump_result = commands.getstatusoutput(dump_string)
     umount_drive()
 
-def change_location():
-    new_location  = input('(new location)> ')
-    hostname_file = open("/etc/hostname", "w")
-    hosts_file    = open("/etc/hosts", "a")
-    location_id   = new_location
-    hostname_file.write(new_location);
-    hosts_file.write(' ' + new_location);
-    hostname_file.close()
-    hosts_file.close()
+def empty_db():
+    try:
+        query = "truncate table scans"
+        mysql_cursor.execute(query)
+
+    except mysql.Error, error:
+        panic(error, 1)
+
+    else:
+        mysql_connection.commit()
 
 def mysql_connect(hostname, username, password, database):
     return mysql.connect(hostname, username, password, database)
-
-# connect to mysql database
-mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
-mysql_cursor     = mysql_connection.cursor()
 
 while 1:
     try:
@@ -85,10 +82,7 @@ while 1:
         mysql_cursor.execute(query)
 
     except mysql.Error, error:
-        mysql_connection.rollback()
         panic(error, 1)
-        if mysql_connection:
-            mysql_connection.close()
 
     else:
         mysql_connection.commit()
