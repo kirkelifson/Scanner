@@ -56,11 +56,14 @@ def export_data():
     umount_drive()
 
 def change_location():
-    new_location = input('(new location)> ')
+    new_location  = input('(new location)> ')
     hostname_file = open("/etc/hostname", "w")
+    hosts_file    = open("/etc/hosts", "a")
+    location_id   = new_location
     hostname_file.write(new_location);
+    hosts_file.write(' ' + new_location);
     hostname_file.close()
-    location_id = new_location
+    hosts_file.close()
 
 def mysql_connect(hostname, username, password, database):
     return mysql.connect(hostname, username, password, database)
@@ -78,7 +81,7 @@ while 1:
         time = time.time()
 
         # table layout:
-        #   scans (id, barcode, location, timestamp, flag)
+        #   scans (id, barcode, location, timestamp)
 
         # check for duplicate scans
         # time difference between last scan?
