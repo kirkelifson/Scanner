@@ -56,11 +56,14 @@ def export_data():
     umount_drive()
 
 def change_location():
-    new_location = input('(new location)> ')
+    new_location  = input('(new location)> ')
     hostname_file = open("/etc/hostname", "w")
+    hosts_file    = open("/etc/hosts", "a")
+    location_id   = new_location
     hostname_file.write(new_location);
+    hosts_file.write(' ' + new_location);
     hostname_file.close()
-    location_id = new_location
+    hosts_file.close()
 
 def mysql_connect(hostname, username, password, database):
     return mysql.connect(hostname, username, password, database)
@@ -79,7 +82,6 @@ while 1:
         unix_timestamp = time.time()
 
         query = "INSERT INTO scans (barcode, location, timestamp) VALUES({0}, '{1}', {2});".format(barcode, location_id, unix_timestamp)
-        print "executing query"
         mysql_cursor.execute(query)
 
     except mysql.Error, error:
@@ -90,4 +92,3 @@ while 1:
 
     else:
         mysql_connection.commit()
-        print "query complete"
