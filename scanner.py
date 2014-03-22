@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# table layout: scans (id, barcode, location, timestamp)
 
 import MySQLdb as mysql
 import sys
@@ -22,7 +23,7 @@ def panic(error_string, error_code):
     print(string)
     sys.exit(error_code)
 
-def barcode_input(code):
+def flag(code):
     if   (int(code) == import_magic):
         import_data()
     elif (int(code) == export_magic):
@@ -31,7 +32,6 @@ def barcode_input(code):
         change_location()
     elif (int(code) == empty_magic):
         empty_database()
-    return 0
 
 # mount the thumb drive connected to the raspberry pi
 def mount_drive():
@@ -67,32 +67,27 @@ def mysql_connect(hostname, username, password, database):
 
 # connect to mysql database
 mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
-mysql_cursor = mysql_connection.cursor()
-mysql_cursor.execute("use scanner")
+mysql_cursor     = mysql_connection.cursor()
 
 while 1:
     try:
-        # grab input from terminal
-        card_id = input('> ')
-        special = barcode_input(card_id)
-        time = time.time()
+        barcode = input('> ')
 
-        # table layout:
-        #   scans (id, barcode, location, timestamp, flag)
+        # catch any magic numbers
+        flag(barcode)
 
-        # check for duplicate scans
-        # time difference between last scan?
-        # if < 5 sec && same code, deny
+        unix_timestamp = time.time()
 
-        # input scan data into table
-        sqlstring = "INSERT INTO scans (barcode, location, time, special) VALUES({0}, '{1}', {2});".format(card_id, location_id, time, special)
-        mysql_cursor.execute(sqlstring)
-        mysql_connection.commit()
+        query = "INSERT INTO scans (barcode, location, timestamp) VALUES({0}, '{1}', {2});".format(barcode, location_id, unix_timestamp)
+        print "executing query"
+        mysql_cursor.execute(query)
 
     except mysql.Error, error:
         mysql_connection.rollback()
         panic(error, 1)
-
-    finally:
         if mysql_connection:
             mysql_connection.close()
+
+    else:
+        mysql_connection.commit()
+        print "query complete"
