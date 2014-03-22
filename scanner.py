@@ -13,11 +13,13 @@ location_id = socket.gethostname()
 mysql_connection = mysql.connect('localhost', 'root', '', 'scanner')
 mysql_cursor     = mysql_connection.cursor()
 
-import_magic    = 9780801993000
-export_magic    = 9780801993001
-location_magic  = 9780801993002
-empty_magic     = 9780801993003
-shutdown_magic  = 9780801993004
+magic = {
+        'import'  : 9780801993000,
+        'export'  : 9780801993001,
+        # place next in 02 pos, then 05
+        'empty'   : 9780801993003,
+        'shutdown': 9780801993004
+        }
 
 # panic(string error_string, int error_code)
 # print exception and kill the script
@@ -28,12 +30,14 @@ def panic(error_string, error_code):
     sys.exit(error_code)
 
 def flag(code):
-    if   (int(code) == import_magic):
+    if   (code == magic['import']):
         import_data()
-    elif (int(code) == export_magic):
+    elif (code == magic['export']):
         export_data()
-    elif (int(code) == empty_magic):
-        empty_database()
+    elif (code == magic['empty']):
+        empty_db()
+    elif (code == magic['shutdown']):
+        shutdown()
 
 # mount the thumb drive connected to the raspberry pi
 def mount_drive():
@@ -58,35 +62,30 @@ def export_data():
     umount_drive()
 
 def shutdown():
-    unmount_drive()
+    umount_drive()
     mysql_connection.close()
-    os.system("poweroff")
+    os.system("sudo poweroff")
 
 def empty_db():
     try:
-        query = "truncate table scans"
-        mysql_cursor.execute(query)
+        mysql_cursor.execute("truncate scans")
 
     except mysql.Error, error:
         panic(error, 1)
-
-    else:
-        mysql_connection.commit()
 
 while 1:
     try:
         barcode = input('> ')
 
-        # catch any magic numbers
-        flag(barcode)
+        # catch magic numbers
+        if int(barcode) in magic.values():
+            flag(int(barcode))
 
-        unix_timestamp = time.time()
-
-        query = "INSERT INTO scans (barcode, location, timestamp) VALUES({0}, '{1}', {2});".format(barcode, location_id, unix_timestamp)
-        mysql_cursor.execute(query)
+        else:
+            unix_timestamp = time.time()
+            query = "INSERT INTO scans (barcode, location, timestamp) VALUES({0}, '{1}', {2});".format(barcode, location_id, unix_timestamp)
+            mysql_cursor.execute(query)
+            mysql_connection.commit()
 
     except mysql.Error, error:
         panic(error, 1)
-
-    else:
-        mysql_connection.commit()
