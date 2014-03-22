@@ -3,19 +3,21 @@
 
 import MySQLdb as mysql
 import sys
+import os
 import commands
 import socket
 import time
 
 # define static global vars and sockets
 location_id = socket.gethostname()
-mysql_connection = mysql_connect('localhost', 'root', '', 'scanner')
+mysql_connection = mysql.connect('localhost', 'root', '', 'scanner')
 mysql_cursor     = mysql_connection.cursor()
 
-import_magic    = 9780801993077
-export_magic    = 9780801993078
-location_magic  = 9780801993079
-empty_magic     = 9780801993080
+import_magic    = 9780801993000
+export_magic    = 9780801993001
+location_magic  = 9780801993002
+empty_magic     = 9780801993003
+shutdown_magic  = 9780801993004
 
 # panic(string error_string, int error_code)
 # print exception and kill the script
@@ -55,6 +57,11 @@ def export_data():
     dump_result = commands.getstatusoutput(dump_string)
     umount_drive()
 
+def shutdown():
+    unmount_drive()
+    mysql_connection.close()
+    os.system("poweroff")
+
 def empty_db():
     try:
         query = "truncate table scans"
@@ -65,9 +72,6 @@ def empty_db():
 
     else:
         mysql_connection.commit()
-
-def mysql_connect(hostname, username, password, database):
-    return mysql.connect(hostname, username, password, database)
 
 while 1:
     try:
