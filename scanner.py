@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # table layout: scans (id, barcode, location, timestamp)
 
-import MySQLdb as mysql
+import sqlite3 as sql
 import sys
 import os
 import commands
@@ -10,8 +10,9 @@ import time
 
 # define static global vars and sockets
 location_id = socket.gethostname()
-mysql_connection = mysql.connect('localhost', 'root', '', 'scanner')
-mysql_cursor     = mysql_connection.cursor()
+sql_connection = sql.connect(location_id + '.db')
+sql_cursor     = sql_connection.cursor()
+sql_cursor.execute('create table if not exists scans(id integer primary key, barcode text, location text, timestamp integer);')
 
 magic = {
         'import'  : 9780801993000,
@@ -24,7 +25,7 @@ magic = {
 # panic(string error_string, int error_code)
 # print exception and kill the script
 def panic(error_string, error_code):
-    mysql_connection.rollback()
+    sql_connection.rollback()
     string = "[!] {0}: {1}".format(error_code, error_string)
     print(string)
     sys.exit(error_code)
@@ -51,26 +52,26 @@ def umount_drive():
     
 def import_data():
     mount_drive()
-    import_string = "sudo mysql -u root scanner < /media/usb/auth_id"
+    import_string = "sudo sql -u root scanner < /media/usb/auth_id"
     import_result = commands.getstatusoutput(import_string)
     umount_drive()
 
 def export_data():
     mount_drive()
-    dump_string = "sudo mysqldump -u root scanner > /media/usb/{0}.sql".format(location_id)
+    dump_string = "sudo sqldump -u root scanner > /media/usb/{0}.sql".format(location_id)
     dump_result = commands.getstatusoutput(dump_string)
     umount_drive()
 
 def shutdown():
     umount_drive()
-    mysql_connection.close()
+    sql_connection.close()
     os.system("sudo poweroff")
 
 def empty_db():
     try:
-        mysql_cursor.execute("truncate scans")
+        sql_cursor.execute("truncate scans")
 
-    except mysql.Error, error:
+    except sql.Error, error:
         panic(error, 1)
 
 while 1:
@@ -84,8 +85,8 @@ while 1:
         else:
             unix_timestamp = time.time()
             query = "INSERT INTO scans (barcode, location, timestamp) VALUES({0}, '{1}', {2});".format(barcode, location_id, unix_timestamp)
-            mysql_cursor.execute(query)
-            mysql_connection.commit()
+            sql_cursor.execute(query)
+            sql_connection.commit()
 
-    except mysql.Error, error:
+    except sql.Error, error:
         panic(error, 1)
