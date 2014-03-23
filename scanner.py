@@ -42,10 +42,11 @@ def flag(code):
 
 # mount the thumb drive connected to the raspberry pi
 def mount_drive():
-    mount_grep  = "ls -lA /dev/disk/by-label/ | perl -i -p -e 's/\n//' | sed -e 's/.*\///g'"
+    mount_grep  = "ls -lA /dev/disk/by-label/ | perl -p -e 's/\n//' | sed -e 's/.*\///g'"
     mount_point = commands.getstatusoutput(mount_grep)
     mount_cmd   = "sudo mount -t vfat /dev/{0} /media/usb".format(str(mount_point[1]))
     mount_ret   = commands.getstatusoutput(mount_cmd)
+    print str(mount_ret)
 
 def umount_drive():
     unmount_ret = commands.getstatusoutput("sudo umount /media/usb")
@@ -83,7 +84,7 @@ while 1:
 
         else:
             unix_timestamp = time.time()
-            query = "INSERT INTO scans (barcode, location, timestamp) VALUES({0}, '{1}', {2});".format(barcode, location_id, unix_timestamp)
+            query = "insert into scans (barcode, location, timestamp) values({0}, '{1}', {2});".format(barcode, location_id, unix_timestamp)
             sql_cursor.execute(query)
             sql_connection.commit()
 
