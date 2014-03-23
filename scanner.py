@@ -5,11 +5,9 @@ import sqlite3 as sql
 import sys
 import os
 import commands
-import socket
 import time
 
-# define static global vars and sockets
-location_id = socket.gethostname()
+location_id    = os.uname()[1]
 sql_connection = sql.connect(location_id + '.db')
 sql_cursor     = sql_connection.cursor()
 sql_cursor.execute('create table if not exists scans(id integer primary key, barcode text, location text, timestamp integer);')
@@ -26,9 +24,8 @@ magic = {
 # print exception and kill the script
 def panic(error_string, error_code):
     sql_connection.rollback()
-    string = "[!] {0}: {1}".format(error_code, error_string)
-    print(string)
-    sys.exit(error_code)
+    print "[!] {0}: {1}".format(error_code, error_string)
+    os.execv("./scanner.py", sys.argv)
 
 def flag(code):
     if   (code == magic['import']):
@@ -89,4 +86,10 @@ while 1:
             sql_connection.commit()
 
     except sql.Error, error:
+        panic(error, 1)
+
+    except SyntaxError, error:
+        panic(error, 1)
+
+    except NameError, error:
         panic(error, 1)
