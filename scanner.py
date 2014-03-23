@@ -15,9 +15,8 @@ sql_cursor.execute('create table if not exists scans(id integer primary key, bar
 magic = {
         'import'  : 9780801993000,
         'export'  : 9780801993001,
-        # place next in 02 pos, then 05
-        'empty'   : 9780801993003,
-        'shutdown': 9780801993004
+        'empty'   : 9780801993002,
+        'shutdown': 9780801993003
         }
 
 # panic(string error_string, int error_code)
