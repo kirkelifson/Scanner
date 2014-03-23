@@ -24,8 +24,11 @@ magic = {
 # print exception and kill the script
 def panic(error_string, error_code):
     sql_connection.rollback()
+    if (error_code == 1):
+        error_code = 'SQL: '
+
     print "[!] {0}: {1}".format(error_code, error_string)
-    os.execv("./scanner.py", sys.argv)
+    os.execv("/home/pi/scanner/scanner.py", sys.argv)
 
 def flag(code):
     if   (code == magic['import']):
@@ -73,23 +76,16 @@ def empty_db():
 
 while 1:
     try:
-        barcode = input('> ')
+        barcode = raw_input('> ')
 
         # catch magic numbers
-        if int(barcode) in magic.values():
+        if barcode.isdigit() and int(barcode) in magic.values():
             flag(int(barcode))
-
         else:
             unix_timestamp = time.time()
-            query = "insert into scans (barcode, location, timestamp) values({0}, '{1}', {2});".format(barcode, location_id, unix_timestamp)
+            query = "insert into scans (barcode, location, timestamp) values('{0}', '{1}', {2});".format(barcode, location_id, unix_timestamp)
             sql_cursor.execute(query)
             sql_connection.commit()
 
     except sql.Error, error:
-        panic(error, 1)
-
-    except SyntaxError, error:
-        panic(error, 1)
-
-    except NameError, error:
         panic(error, 1)
