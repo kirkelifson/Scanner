@@ -52,13 +52,15 @@ def umount_drive():
     
 def import_data():
     mount_drive()
-    import_string = "sudo sql -u root scanner < /media/usb/auth_id"
+    # cp -b to backup existing files
+    import_string = "cp -b /media/usb/{0}.db ."
     import_result = commands.getstatusoutput(import_string)
     umount_drive()
 
 def export_data():
     mount_drive()
-    dump_string = "sudo sqldump -u root scanner > /media/usb/{0}.sql".format(location_id)
+    # cp -b to backup existing files
+    dump_string = "cp -b {0}.db /media/usb/".format(location_id, time.time())
     dump_result = commands.getstatusoutput(dump_string)
     umount_drive()
 
@@ -68,11 +70,8 @@ def shutdown():
     os.system("sudo poweroff")
 
 def empty_db():
-    try:
-        sql_cursor.execute("truncate scans")
-
-    except sql.Error, error:
-        panic(error, 1)
+    sql_cursor.execute('drop table scans')
+    sql_cursor.execute('create table if not exists scans(id integer primary key, barcode text, location text, timestamp integer)')
 
 while 1:
     try:
